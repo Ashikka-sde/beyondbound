@@ -1,4 +1,4 @@
-// backend/controllers/destinationController.js
+import db from "../config/db.js";
 import {
   getAllDestinations,
   getDestinationById,
@@ -7,75 +7,93 @@ import {
   deleteDestination
 } from "../models/destinationModel.js";
 
-// Get all destinations
+// ✅ Get all destinations
 export const fetchAllDestinations = async (req, res) => {
   try {
     const destinations = await getAllDestinations();
-    res.status(200).json(destinations);
+    res.json(destinations);
   } catch (err) {
-    console.error("Error fetching destinations:", err);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// Get destination by ID
+// ✅ Get destination by slug
+export const fetchDestinationBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const [rows] = await db.query(
+      `SELECT * FROM Destinations 
+       WHERE LOWER(REPLACE(destination_name, ' ', '')) = LOWER(?)`,
+      [slug]
+    );
+
+    if (rows.length === 0)
+      return res.status(404).json({ message: "Destination not found" });
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Slug fetch error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ✅ Get destination by ID
 export const fetchDestinationById = async (req, res) => {
-  const { id } = req.params;
   try {
-    const destination = await getDestinationById(id);
+    const destination = await getDestinationById(req.params.id);
     if (!destination) return res.status(404).json({ message: "Destination not found" });
-    res.status(200).json(destination);
-  } catch (err) {
-    console.error("Error fetching destination:", err);
-    res.status(500).json({ message: "Internal server error" });
+    res.json(destination);
+  } catch {
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// Add destination
+// ✅ Add destination
 export const addDestination = async (req, res) => {
-  const { destination_name, state, category, description, image_url } = req.body;
-  if (!destination_name || !state || !category)
-    return res.status(400).json({ message: "Missing required fields" });
-
   try {
-    const newDestination = await createDestination({
+    const { destination_name, state, category, description, image_url } = req.body;
+
+    if (!destination_name || !state || !category) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const result = await createDestination({
       destination_name,
       state,
       category,
       description,
-      image_url
+      image_url,
     });
-    res.status(201).json({ message: "Destination added successfully", destination: newDestination });
+
+    res.status(201).json({ message: "Destination added", result });
   } catch (err) {
-    console.error("Error adding destination:", err);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// Update destination
+// ✅ Update destination
 export const modifyDestination = async (req, res) => {
-  const { id } = req.params;
   try {
-    const result = await updateDestination(id, req.body);
+    const result = await updateDestination(req.params.id, req.body);
     if (result.affectedRows === 0)
       return res.status(404).json({ message: "Destination not found" });
-    res.status(200).json({ message: "Destination updated successfully" });
-  } catch (err) {
-    console.error("Error updating destination:", err);
-    res.status(500).json({ message: "Internal server error" });
+
+    res.json({ message: "Destination updated" });
+  } catch {
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// Delete destination
+// ✅ Delete destination
 export const removeDestination = async (req, res) => {
-  const { id } = req.params;
   try {
-    const result = await deleteDestination(id);
+    const result = await deleteDestination(req.params.id);
     if (result.affectedRows === 0)
       return res.status(404).json({ message: "Destination not found" });
-    res.status(200).json({ message: "Destination deleted successfully" });
-  } catch (err) {
-    console.error("Error deleting destination:", err);
-    res.status(500).json({ message: "Internal server error" });
+
+    res.json({ message: "Destination deleted" });
+  } catch {
+    res.status(500).json({ message: "Server error" });
   }
 };

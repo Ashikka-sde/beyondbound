@@ -50,7 +50,8 @@ function Planning({ image, title }) {
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
       >
-        <img src={`/${image}`} alt={title} style={styles.image} />
+        <img src={image} alt={title} style={styles.image} />
+
         <h2 style={styles.title}>{title}</h2>
       </div>
     </Link>

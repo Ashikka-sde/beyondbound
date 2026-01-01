@@ -31,8 +31,7 @@ CREATE TABLE Itineraries (
     title VARCHAR(100),
     description TEXT,
     created_by INT,
-    FOREIGN KEY (destination_id) REFERENCES Destinations(destination_id) ON DELETE CASCADE,
-    FOREIGN KEY (created_by) REFERENCES Users(user_id) ON DELETE SET NULL
+    FOREIGN KEY (destination_id) REFERENCES Destinations(destination_id) ON DELETE CASCADE
 );
 
 -- 5️ Itinerary_Places Table

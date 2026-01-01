@@ -436,3 +436,181 @@ INSERT INTO Itinerary_Places (itinerary_id, place_id, day_number, time_of_day) V
 (50, 125, 2, 'Afternoon'),
 (50, 125, 3, 'Morning'),
 (50, 125, 3, 'Afternoon');
+
+-- Additional realistic entries for popular itineraries
+
+-- Manali (Itinerary 1): add evenings and variety
+INSERT INTO Itinerary_Places (itinerary_id, place_id, day_number, time_of_day) VALUES
+(1, 4, 1, 'Evening'),   -- Old Manali cafes
+(1, 2, 2, 'Evening'),   -- Hadimba Temple night ambience
+(1, 1, 4, 'Afternoon'), -- Solang Valley cable car
+(1, 4, 5, 'Evening');   -- Farewell dinner in Old Manali
+
+-- Shimla (Itinerary 2): add sunset/evening walks
+INSERT INTO Itinerary_Places (itinerary_id, place_id, day_number, time_of_day) VALUES
+(2, 6, 1, 'Evening'),   -- Mall Road stroll
+(2, 5, 3, 'Evening');   -- Ridge sunset
+
+-- Agra (Itinerary 16): add sunset and evening show
+INSERT INTO Itinerary_Places (itinerary_id, place_id, day_number, time_of_day) VALUES
+(16, 61, 1, 'Evening'), -- Taj Mahal sunset from Mehtab Bagh
+(16, 62, 2, 'Evening'); -- Agra Fort light & sound
+
+-- Delhi (Itinerary 19): add night views
+INSERT INTO Itinerary_Places (itinerary_id, place_id, day_number, time_of_day) VALUES
+(19, 76, 1, 'Evening'), -- India Gate night view
+(19, 73, 2, 'Evening'); -- Red Fort light & sound
+
+-- =============================================================
+-- AUTO-POPULATE 2-DAY ITINERARIES WITH UP TO 6 SLOTS (2 DAYS ONLY)
+-- For each destination's 2-day itinerary, take up to first 6 places
+-- and assign Morning/Afternoon/Evening for Day 1 and Day 2.
+-- Requires MySQL 8+ (ROW_NUMBER()). Safe to run multiple times if you
+-- guard against duplicates (unique constraints not defined here), so
+-- consider clearing conflicting rows first if needed.
+-- =============================================================
+
+-- Optional cleanup: remove any entries beyond day 2 for 2-day itineraries
+DELETE ip
+FROM Itinerary_Places ip
+JOIN Itineraries i ON i.itinerary_id = ip.itinerary_id
+WHERE i.days = 2 AND ip.day_number > 2;
+
+-- Insert generated slots for 2-day itineraries where missing
+INSERT INTO Itinerary_Places (itinerary_id, place_id, day_number, time_of_day)
+SELECT
+  i.itinerary_id,
+  p.place_id,
+  CASE
+    WHEN rn IN (1,2,3) THEN 1 ELSE 2
+  END AS day_number,
+  CASE rn
+    WHEN 1 THEN 'Morning'
+    WHEN 2 THEN 'Afternoon'
+    WHEN 3 THEN 'Evening'
+    WHEN 4 THEN 'Morning'
+    WHEN 5 THEN 'Afternoon'
+    WHEN 6 THEN 'Evening'
+  END AS time_of_day
+FROM (
+  SELECT destination_id, itinerary_id
+  FROM Itineraries
+  WHERE days = 2
+) i
+JOIN (
+  SELECT destination_id, place_id,
+         ROW_NUMBER() OVER (PARTITION BY destination_id ORDER BY place_id) AS rn
+  FROM Places
+) p ON p.destination_id = i.destination_id AND p.rn <= 6
+-- avoid inserting duplicates if already present
+LEFT JOIN Itinerary_Places ip
+  ON ip.itinerary_id = i.itinerary_id
+ AND ip.place_id = p.place_id
+ AND ip.day_number = CASE WHEN p.rn IN (1,2,3) THEN 1 ELSE 2 END
+ AND ip.time_of_day = CASE p.rn
+                        WHEN 1 THEN 'Morning'
+                        WHEN 2 THEN 'Afternoon'
+                        WHEN 3 THEN 'Evening'
+                        WHEN 4 THEN 'Morning'
+                        WHEN 5 THEN 'Afternoon'
+                        WHEN 6 THEN 'Evening'
+                      END
+WHERE ip.itinerary_place_id IS NULL;
+
+-- =============================================================
+-- OPTIONAL: DENSELY FILL 7-DAY ITINERARIES (UP TO 21 SLOTS)
+-- Assign Morning/Afternoon/Evening repeating across up to 7 days
+-- using first 21 places per destination. Skip if you prefer manual curation.
+-- =============================================================
+
+INSERT INTO Itinerary_Places (itinerary_id, place_id, day_number, time_of_day)
+SELECT
+  i.itinerary_id,
+  p.place_id,
+  ((rn - 1) DIV 3) + 1 AS day_number,
+  CASE ((rn - 1) % 3)
+    WHEN 0 THEN 'Morning'
+    WHEN 1 THEN 'Afternoon'
+    WHEN 2 THEN 'Evening'
+  END AS time_of_day
+FROM (
+  SELECT destination_id, itinerary_id
+  FROM Itineraries
+  WHERE days = 7
+) i
+JOIN (
+  SELECT destination_id, place_id,
+         ROW_NUMBER() OVER (PARTITION BY destination_id ORDER BY place_id) AS rn
+  FROM Places
+) p ON p.destination_id = i.destination_id AND p.rn <= 21
+LEFT JOIN Itinerary_Places ip
+  ON ip.itinerary_id = i.itinerary_id
+ AND ip.place_id = p.place_id
+ AND ip.day_number = (((p.rn - 1) DIV 3) + 1)
+ AND ip.time_of_day = CASE ((p.rn - 1) % 3)
+                        WHEN 0 THEN 'Morning'
+                        WHEN 1 THEN 'Afternoon'
+                        WHEN 2 THEN 'Evening'
+                      END
+WHERE ip.itinerary_place_id IS NULL;
+
+-- =============================================================
+-- FILL 14-DAY ITINERARIES (UP TO 42 SLOTS PER ITINERARY)
+-- Cycles through destination's places; if fewer than 42, repeats in order
+-- Requires MySQL 8+ (CTE + window functions)
+-- =============================================================
+
+-- Cleanup: ensure no entries beyond Day 14 remain for 14-day itineraries
+DELETE ip
+FROM Itinerary_Places ip
+JOIN Itineraries i ON i.itinerary_id = ip.itinerary_id
+WHERE i.days = 14 AND ip.day_number > 14;
+
+WITH RECURSIVE seq(n) AS (
+  SELECT 1
+  UNION ALL
+  SELECT n + 1 FROM seq WHERE n < 42
+),
+places_ranked AS (
+  SELECT
+    destination_id,
+    place_id,
+    ROW_NUMBER() OVER (PARTITION BY destination_id ORDER BY place_id) AS place_rn,
+    COUNT(*) OVER (PARTITION BY destination_id) AS place_cnt
+  FROM Places
+)
+INSERT INTO Itinerary_Places (itinerary_id, place_id, day_number, time_of_day)
+SELECT
+  i.itinerary_id,
+  p.place_id,
+  ((s.n - 1) DIV 3) + 1 AS day_number,
+  CASE ((s.n - 1) % 3)
+    WHEN 0 THEN 'Morning'
+    WHEN 1 THEN 'Afternoon'
+    WHEN 2 THEN 'Evening'
+  END AS time_of_day
+FROM Itineraries i
+CROSS JOIN seq s
+JOIN (
+  SELECT pr1.destination_id, pr1.place_id, pr1.place_rn
+  FROM places_ranked pr1
+) p
+  ON p.destination_id = i.destination_id
+ AND p.place_rn = (
+       CASE WHEN (SELECT MAX(place_cnt) FROM places_ranked pr2 WHERE pr2.destination_id = i.destination_id) > 0
+            THEN ((s.n - 1) % (SELECT MAX(place_cnt) FROM places_ranked pr3 WHERE pr3.destination_id = i.destination_id)) + 1
+            ELSE 1
+        END
+     )
+LEFT JOIN Itinerary_Places ip
+  ON ip.itinerary_id = i.itinerary_id
+ AND ip.place_id = p.place_id
+ AND ip.day_number = (((s.n - 1) DIV 3) + 1)
+ AND ip.time_of_day = CASE ((s.n - 1) % 3)
+                        WHEN 0 THEN 'Morning'
+                        WHEN 1 THEN 'Afternoon'
+                        WHEN 2 THEN 'Evening'
+                      END
+WHERE i.days = 14
+  AND (((s.n - 1) DIV 3) + 1) <= 14
+  AND ip.itinerary_place_id IS NULL;

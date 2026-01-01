@@ -1,8 +1,8 @@
-// backend/routes/destinationRoutes.js
 import express from "express";
 import {
   fetchAllDestinations,
   fetchDestinationById,
+  fetchDestinationBySlug,
   addDestination,
   modifyDestination,
   removeDestination
@@ -10,10 +10,22 @@ import {
 
 const router = express.Router();
 
-router.get("/", fetchAllDestinations);        // GET all
-router.get("/:id", fetchDestinationById);     // GET one
-router.post("/", addDestination);             // POST
-router.put("/:id", modifyDestination);        // UPDATE
-router.delete("/:id", removeDestination);     // DELETE
+// Get all destinations
+router.get("/", fetchAllDestinations);
+
+// Get destination by slug (/manali)
+router.get("/slug/:slug", fetchDestinationBySlug);
+
+// Get destination by ID
+router.get("/:id", fetchDestinationById);
+
+// Add destination
+router.post("/", addDestination);
+
+// Update destination
+router.put("/:id", modifyDestination);
+
+// Delete destination
+router.delete("/:id", removeDestination);
 
 export default router;

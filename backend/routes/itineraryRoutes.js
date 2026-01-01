@@ -8,7 +8,8 @@ import {
     fetchItineraryById, 
     addItinerary, 
     modifyItinerary, 
-    removeItinerary 
+    removeItinerary, 
+    fetchItinerariesByDestination
 } from '../controllers/itineraryController.js';
 
 // 2. Import Itinerary Place Controller functions
@@ -24,6 +25,8 @@ const router = express.Router();
 // --- ITINERARY ROUTES (Parent Resource) ---
 router.get("/", fetchAllItineraries);
 router.post("/", addItinerary);
+// Get itineraries by destination id
+router.get("/destination/:destination_id", fetchItinerariesByDestination);
 // IMPORTANT: Keep the general ID route here, before the nested route
 router.get("/:id", fetchItineraryById); 
 router.put("/:id", modifyItinerary);

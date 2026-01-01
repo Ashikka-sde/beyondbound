@@ -28,9 +28,13 @@ app.get("/", (req, res) => {
 
 // Use routes
 app.use("/api/destinations", destinationRoutes);
+app.use("/api/destination", destinationRoutes);
+
+
 app.use("/api/places", placeRoutes);
 app.use("/api/itineraries", itineraryRoutes);
 app.use("/api/transports", transportRoutes);
+app.use('/media', express.static('media'));
 
 // Handle unknown routes
 app.use((req, res) => {

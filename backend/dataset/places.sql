@@ -107,7 +107,7 @@ INSERT INTO Places (destination_id, place_name, description, best_time_to_visit,
 (18, 'City Palace', 'Massive palace complex overlooking Lake Pichola.', 'October to March', 'media/places/city_palace_udaipur.jpg'),
 (18, 'Lake Pichola', 'Artificial lake with boat rides and sunset views.', 'October to March', 'media/places/lake_pichola.jpg'),
 (18, 'Jag Mandir', 'Island palace known for its gardens.', 'October to March', 'media/places/jag_mandir.jpg'),
-(18, 'Fateh Sagar Lake', 'Another scenic lake surrounded by hills.', 'All year', 'media/places/fateh_sagar_lake.jpg'), -- didnt take 
+(18, 'Fateh Sagar Lake', 'Another scenic lake surrounded by hills.', 'All year', 'media/places/fateh_sagar_lake.jpg'), 
 
 -- 19. Delhi
 (19, 'Red Fort', 'Historic Mughal fort and UNESCO site.', 'October to March', 'media/places/red_fort.jpg'),
@@ -127,7 +127,7 @@ INSERT INTO Places (destination_id, place_name, description, best_time_to_visit,
 (21, 'Kaziranga National Park', 'UNESCO-listed park known for one-horned rhinos and elephants roaming in tall grasslands.', 'November to April', 'media/places/kaziranganationalpark.jpg'),
 (21, 'Bagori Range', 'Western range offering jeep safaris to spot rhinos, elephants, and deer in their natural habitat.', 'November to March', 'media/places/bagorirange.jpg'),
 (21, 'Agaratoli Range', 'Eastern area known for birdwatching and scenic forest drives along the Brahmaputra.', 'December to February', 'media/places/agaratolirange.jpg'),
-(21, 'Kaziranga Orchid Park', 'Botanical garden showcasing over 500 species of orchids native to the region.', 'All year', 'media/places/kazirangaorchidpark.jpg'), -- didnt take 
+(21, 'Kaziranga Orchid Park', 'Botanical garden showcasing over 500 species of orchids native to the region.', 'All year', 'media/places/kazirangaorchidpark.jpg'), 
 
 -- 22 Jim Corbett
 (22, 'Corbett National Park', 'India’s oldest national park known for Bengal tigers, elephants, and diverse flora.', 'November to June', 'media/places/corbettnationalpark.jpg'),
@@ -285,3 +285,8 @@ INSERT INTO Places (destination_id, place_name, description, best_time_to_visit,
 (50, 'Salugara Monastery', 'Peaceful Buddhist monastery with a 100-foot stupa.', 'November to February', 'media/places/salugaramonastery.jpg'),
 (50, 'Coronation Bridge', 'Iconic British-era bridge across the Teesta River.', 'October to February', 'media/places/coronationbridge.jpg'),
 (50, 'ISKCON Temple Siliguri', 'Beautiful temple and spiritual retreat near Sevoke Road.', 'October to March', 'media/places/iskcontemplesiliguri.jpg');
+
+INSERT INTO Places(destination_id, place_name, description, best_time_to_visit, image_url) VALUES
+(25, 'Baghel Museum', 'A rich repertoire of varied possessions of all the Maharajas of the Baghel dynasty', 'November to March', 'media/places/baghel.jpg'),
+(23, 'Rabrindranath Tagore Bungalow', "A place where the cultural heritage of Bengal meets the untouched natural beauty of one of the world's most unique ecosystems.", 'November to February', 'media/places/rabbung.jpg'),
+(28, 'Lhalung Monastery', 'An ode to the deep-rooted Buddhist tradition and culture', 'June to September', 'media/places/lha.jpeg');
